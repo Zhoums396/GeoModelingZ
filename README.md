@@ -77,6 +77,9 @@ GeoModelingZ.create_geo_map(geojson_file="path/to/your/data.geojson")
 
 ## 更新日志
 
+### v0.0.3
+- 修改了可视化地图的渲染样式
+
 ### v0.0.2
 - 添加了交互式地理地图功能 (create_geo_map)
 - 支持GeoJSON数据的可视化
