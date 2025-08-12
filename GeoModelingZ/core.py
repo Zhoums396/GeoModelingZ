@@ -33,54 +33,6 @@ if is_jupyter():
 else:
     _HAS_JUPYTER_SUPPORT = False
 
-def say_hello(name: str):
-    """
-    生成一句友好的问候语。
-    
-    如果在Jupyter环境中运行，将以HTML格式显示。
-    
-    参数:
-        name (str): 用户名
-    
-    返回:
-        str: 问候语
-    """
-    greeting = f"Hello, {name}! Welcome to GeoModelingZ."
-    
-    if _HAS_JUPYTER_SUPPORT:
-        display(HTML(f"<h3 style='color:green'>{greeting}</h3>"))
-    
-    return greeting
-
-def get_current_time_str():
-    """
-    以字符串形式返回当前时间。
-    
-    返回:
-        str: 格式化的当前时间
-    """
-    return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-def show_time_widget():
-    """
-    显示一个交互式时间小部件，可以选择时间格式。
-    
-    仅在Jupyter环境中有效。
-    """
-    if not _HAS_JUPYTER_SUPPORT:
-        print("此功能仅在Jupyter环境中可用。")
-        return
-    
-    @interact
-    def format_time(format_str=widgets.Dropdown(
-        options=['%Y-%m-%d %H:%M:%S', '%Y/%m/%d', '%H:%M:%S', '%Y年%m月%d日 %H时%M分%S秒'],
-        value='%Y-%m-%d %H:%M:%S',
-        description='时间格式:'
-    )):
-        now = datetime.datetime.now()
-        formatted = now.strftime(format_str)
-        display(HTML(f"<p>当前时间: <b>{formatted}</b></p>"))
-        return formatted
 
 def plot_simple_chart(x_data=None, y_data=None, title="简单图表", interactive=True):
     """
@@ -123,55 +75,10 @@ def plot_simple_chart(x_data=None, y_data=None, title="简单图表", interactiv
         plt.grid(True)
         return fig
 
-def display_markdown(text):
-    """
-    以Markdown格式显示文本。
-    
-    参数:
-        text (str): Markdown格式的文本
-    """
-    if _HAS_JUPYTER_SUPPORT:
-        display(Markdown(text))
-    else:
-        print(text)
 
-def create_geo_widget():
-    """
-    创建一个地理数据可视化的简单交互式小部件。
-    
-    仅在Jupyter环境中有效。
-    """
-    if not _HAS_JUPYTER_SUPPORT:
-        print("此功能仅在Jupyter环境中可用。")
-        return
-    
-    # 创建一些示例数据
-    latitudes = np.random.uniform(20, 50, 10)
-    longitudes = np.random.uniform(100, 140, 10)
-    values = np.random.uniform(0, 100, 10)
-    
-    @interact
-    def plot_geo(
-        marker_size=widgets.IntSlider(min=10, max=200, step=10, value=50, description='点大小:'),
-        color_map=widgets.Dropdown(
-            options=['viridis', 'plasma', 'inferno', 'magma', 'cividis'],
-            value='viridis',
-            description='颜色映射:'
-        )
-    ):
-        plt.figure(figsize=(12, 8))
-        scatter = plt.scatter(longitudes, latitudes, c=values, s=marker_size, cmap=color_map, alpha=0.7)
-        plt.colorbar(scatter, label='数值')
-        plt.title('地理数据可视化')
-        plt.xlabel('经度')
-        plt.ylabel('纬度')
-        plt.grid(True)
-        plt.show()
-
-
-# 创建一个地理地图，输入参数为地图宽高（默认为800*600）、geojson数据文件（默认随机生成点）、点大小（默认50）、颜色映射（默认viridis）
-def create_geo_map(width=800, height=600, geojson_file=None, point_size=50, color_map='viridis', 
-                center=[35, 120], zoom_start=5, mapbox_token=''):
+# 创建一个地理地图，输入参数为地图宽高（默认为800*600）、geojson数据文件（默认随机生成点）、点大小（默认50）
+def create_geo_map(width=800, height=600, geojson_file=None, 
+                center=[39.89945, 116.40769], zoom_start=5, mapbox_token='', basemap='streets'):
     """
     创建一个交互式地理地图，使用Folium和Mapbox底图。支持点、线、多边形数据渲染。
     
@@ -179,11 +86,10 @@ def create_geo_map(width=800, height=600, geojson_file=None, point_size=50, colo
         width (int): 地图宽度
         height (int): 地图高度
         geojson_file (str): GeoJSON数据文件路径
-        point_size (int): 点大小
-        color_map (str): 颜色映射
         center (list): 地图中心点坐标 [纬度, 经度]
         zoom_start (int): 初始缩放级别
         mapbox_token (str): Mapbox访问令牌
+        basemap (str): 底图类型，可选值：'streets'(矢量地图)、'satellite'(影像地图)、'outdoors'(地形图)、'light'(浅色)、'dark'(深色)
     
     返回:
         folium.Map: 交互式地图对象
@@ -197,44 +103,89 @@ def create_geo_map(width=800, height=600, geojson_file=None, point_size=50, colo
         print("请安装folium库: pip install folium")
         return None
     
+    # 底图类型映射
+    basemap_styles = {
+        'streets': 'streets-v11',    # 矢量地图
+        'satellite': 'satellite-v9', # 影像地图
+        'outdoors': 'outdoors-v11',  # 地形图
+        'light': 'light-v10',        # 浅色底图
+        'dark': 'dark-v10'           # 深色底图
+    }
+    
+    # 确保选择的底图类型有效
+    if basemap not in basemap_styles:
+        print(f"警告: 未知的底图类型 '{basemap}'，使用默认的 'streets'")
+        basemap = 'streets'
+    
     # 创建地图
-    m = folium.Map(
-        location=center,
-        zoom_start=zoom_start,
-        width=width,
-        height=height,
-        tiles="https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=" + mapbox_token,
-        attr='Mapbox'
-    )
+    if mapbox_token:
+        # 如果有Mapbox令牌，使用Mapbox底图
+        m = folium.Map(
+            location=center,
+            zoom_start=zoom_start,
+            width=width,
+            height=height,
+            tiles="https://api.mapbox.com/styles/v1/mapbox/{style}/tiles/{{z}}/{{x}}/{{y}}?access_token={token}".format(
+                style=basemap_styles[basemap],
+                token=mapbox_token
+            ),
+            attr='Mapbox'
+        )
+    else:
+        # 如果没有Mapbox令牌，默认使用OpenStreetMap
+        m = folium.Map(
+            location=center,
+            zoom_start=zoom_start,
+            width=width,
+            height=height,
+            tiles='OpenStreetMap'
+        )
+    
+    # 添加底图切换控件
+    if mapbox_token:
+        # 先添加OpenStreetMap作为备选底图（放在底部）
+        folium.TileLayer('OpenStreetMap', name='OpenStreetMap').add_to(m)
+        
+        # 添加不同类型的Mapbox底图，确保当前选择的底图最后添加（会显示在最上层）
+        # 创建底图名称的英文映射
+        map_type_names = {
+            'streets': 'Streets',
+            'satellite': 'Satellite',
+            'outdoors': 'Terrain',
+            'light': 'Light',
+            'dark': 'Dark'
+        }
+        
+        # 先添加非当前选择的底图
+        for map_type, style in basemap_styles.items():
+            if map_type != basemap:  # 不是当前选择的底图
+                # 使用英文名称
+                display_name = f"Mapbox {map_type_names.get(map_type, map_type.capitalize())}"
+                
+                folium.TileLayer(
+                    tiles="https://api.mapbox.com/styles/v1/mapbox/{style}/tiles/{{z}}/{{x}}/{{y}}?access_token={token}".format(
+                        style=style,
+                        token=mapbox_token
+                    ),
+                    attr='Mapbox',
+                    name=display_name
+                ).add_to(m)
+        
+        # 最后添加当前选择的底图，确保它是默认显示的
+        display_name = f"Mapbox {map_type_names.get(basemap, basemap.capitalize())}"
+        folium.TileLayer(
+            tiles="https://api.mapbox.com/styles/v1/mapbox/{style}/tiles/{{z}}/{{x}}/{{y}}?access_token={token}".format(
+                style=basemap_styles[basemap],
+                token=mapbox_token
+            ),
+            attr='Mapbox',
+            name=display_name
+        ).add_to(m)
     
     if geojson_file is None:
-        # 随机生成点
-        latitudes = np.random.uniform(20, 50, 10)
-        longitudes = np.random.uniform(100, 140, 10)
-        values = np.random.uniform(0, 100, 10)
-        
-        # 创建颜色映射
-        color_scale = LinearColormap(
-            colors=['green', 'yellow', 'red'],
-            vmin=min(values),
-            vmax=max(values),
-            caption='数值'
-        )
-        
-        # 添加点到地图
-        for lat, lon, val in zip(latitudes, longitudes, values):
-            folium.CircleMarker(
-                location=[lat, lon],
-                radius=point_size/10,  # 调整大小比例
-                color=None,
-                fill=True,
-                fill_color=color_scale(val),
-                fill_opacity=0.7,
-                popup=f"值: {val:.2f}"
-            ).add_to(m)
-            
-        # 添加颜色图例
-        color_scale.add_to(m)
+        print("没有提供geojson文件")
+        folium.LayerControl(position='topright', collapsed=True).add_to(m)
+        return m
     else:
         # 读取geojson数据
         try:
@@ -458,8 +409,8 @@ def create_geo_map(width=800, height=600, geojson_file=None, point_size=50, colo
                     except Exception as inner_e:
                         print(f"尝试直接渲染MultiPolygon时出错: {inner_e}")
             
-            # 添加图层控制
-            folium.LayerControl().add_to(m)
+            # 添加图层控制（包括底图选择），默认收起
+            folium.LayerControl(position='topright', collapsed=True).add_to(m)
             
             # 自动聚焦到数据区域
             try:
@@ -506,3 +457,4 @@ def create_geo_map(width=800, height=600, geojson_file=None, point_size=50, colo
         except Exception as e:
             print(f"读取GeoJSON文件出错: {e}")
     return m
+

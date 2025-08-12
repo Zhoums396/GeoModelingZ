@@ -1,16 +1,16 @@
 # GeoModelingZ
 
-这是一个地理建模工具库，专为Jupyter Notebook环境优化，提供了丰富的交互式功能。
+这是一个地理建模与可视化工具库，专为Jupyter Notebook环境优化，提供了丰富的交互式地理数据可视化功能。
 
-## 功能
+## 主要功能
 
-- 提供友好的问候语
-- 获取格式化的当前时间
-- Jupyter Notebook交互式组件
-- 数据可视化与图表交互
-- 交互式地理地图（支持GeoJSON数据）
-- 支持点、线、多边形和Multi类型几何数据
-- Markdown内容展示
+- **环境检测**: 自动检测Jupyter Notebook环境
+- **交互式图表**: 支持matplotlib交互式图表绘制
+- **地理地图可视化**: 强大的交互式地理地图功能
+- **GeoJSON支持**: 完整支持GeoJSON数据格式
+- **多几何类型**: 支持点、线、多边形和Multi类型几何数据
+- **自动聚焦**: 智能聚焦到数据区域
+- **多底图支持**: 支持Mapbox和OpenStreetMap等多种底图
 
 ## 安装
 
@@ -28,39 +28,59 @@ pip install GeoModelingZ[jupyter]
 
 ## 使用方法
 
-### 基本功能
+### 交互式图表(主版本待开发)
 
 ```python
-import GeoModelingZ
+from GeoModelingZ import plot_simple_chart
 
-# 使用基本函数
-print(GeoModelingZ.say_hello("World"))
-print(f"当前时间是: {GeoModelingZ.get_current_time_str()}")
+# 创建简单的交互式图表
+fig = plot_simple_chart(title="我的图表")
 
-# 查看版本号
-print(f"库版本: {GeoModelingZ.__version__}")
+# 在Jupyter环境中，可以交互调整参数
+# 在普通环境中，返回matplotlib图表对象
 ```
 
-### Jupyter Notebook中的交互功能
+### 地理地图可视化
 
 ```python
-import GeoModelingZ
+from GeoModelingZ import create_geo_map
 
-# 显示交互式时间小部件
-GeoModelingZ.show_time_widget()
+# 创建基本地图
+map_obj = create_geo_map(
+    width=1000, 
+    height=700,
+    center=[39.9042, 116.4074],  # 北京坐标
+    zoom_start=10
+)
 
-# 创建交互式图表
-GeoModelingZ.plot_simple_chart()
+# 加载GeoJSON数据
+map_with_data = create_geo_map(
+    geojson_file="path/to/your/data.geojson",
+    mapbox_token="your_mapbox_token",  # 可选
+    basemap='dark'
+)
 
-# 显示Markdown内容
-GeoModelingZ.display_markdown("# 这是一个标题\n这是**加粗**的文本")
-
-# 创建地理数据可视化小部件
-GeoModelingZ.create_geo_widget()
-
-# 创建交互式地理地图（支持GeoJSON数据）
-GeoModelingZ.create_geo_map(geojson_file="path/to/your/data.geojson")
+# 显示地图（在Jupyter中）
+map_with_data
 ```
+
+## 支持的GeoJSON几何类型
+
+- **Point**: 单点数据
+- **MultiPoint**: 多点数据
+- **LineString**: 线数据
+- **MultiLineString**: 多线数据
+- **Polygon**: 多边形数据
+- **MultiPolygon**: 复杂多边形数据
+
+## 底图类型
+
+- **streets**: 矢量街道地图（默认）
+- **satellite**: 卫星影像地图
+- **outdoors**: 地形图
+- **light**: 浅色底图
+- **dark**: 深色底图
+- **OpenStreetMap**: 开源街道地图
 
 ## 依赖
 
@@ -77,15 +97,17 @@ GeoModelingZ.create_geo_map(geojson_file="path/to/your/data.geojson")
 
 ## 更新日志
 
-### v0.0.3
-- 修改了可视化地图的渲染样式
+### v0.0.6
+- 重构代码结构，移除冗余功能
+- 专注于地理数据可视化核心功能
+- 优化GeoJSON数据处理逻辑
+- 改进地图渲染性能
+- 增强错误处理和调试信息
 
-### v0.0.2
-- 添加了交互式地理地图功能 (create_geo_map)
-- 支持GeoJSON数据的可视化
-- 支持点、线、多边形和Multi类型几何数据
-- 自动聚焦到数据区域
+## 贡献
 
-### v0.0.1
-- 初始版本发布
-- 基本功能实现
+欢迎提交Issue和Pull Request来改进这个库！
+
+## 许可证
+
+MIT License
